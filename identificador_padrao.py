@@ -1,105 +1,136 @@
-import json, re, os, glob
+import os
+import json
 from bs4 import BeautifulSoup
 
-# Cores para o terminal
-G, Y, R, C = '\033[92m', '\033[93m', '\033[91m', '\033[0m'
-print(f"{G}🛠️ Script 1 v2.2 - Identificador Universal (Full Robustness){C}")
+def limpar_preco(preco_texto):
+    """Transforma entradas como '22,50' ou 'R$ 22.50' em float válido."""
+    if not preco_texto:
+        return None
+    # Remove símbolos comuns e troca vírgula por ponto
+    preco_limpo = preco_texto.replace('R$', '').replace(' ', '').replace(',', '.').strip()
+    try:
+        return float(preco_limpo)
+    except ValueError:
+        return None
 
-def limpar_texto(t): return " ".join(str(t).split()).strip()
-
-def gerar_possibilidades_preco(v):
-    b = str(v).replace(',', '.')
-    n = re.sub(r'[^\d]', '', b)
-    return list(set([n, b, b.replace('.', ',')]))
-
-def achar_caminho_json(obj, alvos, caminho=""):
-    v_str = limpar_texto(obj)
-    if v_str in alvos and v_str != "": return caminho
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            novo = f"{caminho}['{k}']" if caminho else f"['{k}']"
-            res = achar_caminho_json(v, alvos, novo)
-            if res: return res
-    elif isinstance(obj, list):
-        for i, v in enumerate(obj):
-            res = achar_caminho_json(v, alvos, f"{caminho}[{i}]")
-            if res: return res
-    return None
-
-def achar_seletor_html(soup, alvo):
-    """Busca no texto e nos atributos das tags (data-price, value, etc)"""
-    alvo_num = re.sub(r'[^\d]', '', str(alvo))
-    if not alvo_num: return None
-
-    # 1. Tenta buscar no texto visível
-    for tag in soup.find_all(string=True):
-        t_limpo = re.sub(r'[^\d]', '', limpar_texto(tag))
-        if alvo_num == t_limpo and len(t_limpo) > 0:
-            el = tag.parent
-            while el and el.name != '[document]':
-                if el.get('id'): return f"#{el.get('id')}"
-                if el.get('class'): return f"{el.name}.{'.'.join(el.get('class'))}"
-                el = el.parent
-            return tag.parent.name
-
-    # 2. Tenta buscar dentro de ATRIBUTOS (Caso a Indiana esconda o preço)
-    for tag in soup.find_all(True):
-        for attr in tag.attrs:
-            val_attr = str(tag.get(attr))
-            if alvo_num == re.sub(r'[^\d]', '', val_attr):
-                if tag.get('id'): return f"#{tag.get('id')}"
-                elif tag.get('class'): return f"{tag.name}.{'.'.join(tag.get('class'))}"
-                return tag.name
-    return None
+def obter_entradas_blindadas():
+    """Garante que o usuário não digite bobagem nos inputs."""
+    while True:
+        p_input = input("💰 Preço do produto (ex: 21.97): ").strip()
+        p_valido = limpar_preco(p_input)
+        if p_valido is not None:
+            return f"{p_valido:.2f}"
+        print("❌ Erro: Preço inválido! Use apenas números, ponto ou vírgula.")
 
 def identificar():
-    db_file, db = "database_sites.json", {}
-    if os.path.exists(db_file):
-        with open(db_file, 'r', encoding='utf-8') as f:
-            try: db = json.load(f)
-            except: db = {}
+    print("\n" + "="*50)
+    print("🛠️  Script 1 v2.3 - Identificador Universal")
+    print("="*50)
 
-    for caminho_arq in glob.glob("html_alvos/*.html"):
-        nome_arq = os.path.basename(caminho_arq)
-        print(f"\n{Y}🔍 Analisando: {nome_arq}{C}")
-        with open(caminho_arq, 'r', encoding='utf-8') as f:
-            html = f.read()
-            if len(html) < 500: continue
+    pasta = "html_alvos"
+    if not os.path.exists(pasta):
+        os.makedirs(pasta)
+        print(f"📁 Pasta '{pasta}' criada. Coloque os HTMLs lá e rode de novo.")
+        return
 
-        soup = BeautifulSoup(html, 'html.parser')
-        p_alvo, n_alvo = input("💰 Preço: "), input("📦 Nome: ")
-        mapa, achou_json = {"arquitetura": None, "caminhos": {}}, False
+    arquivos = [f for f in os.listdir(pasta) if f.endswith('.html')]
+    
+    if not arquivos:
+        print(f"⚠️  Nenhum arquivo .html encontrado em '{pasta}'.")
+        return
 
-        # Busca JSON
-        scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, re.DOTALL)
-        for s in scripts:
-            for m in re.findall(r'(\{.*\}|\[.*\])', s.strip(), re.DOTALL):
-                try:
-                    js = m
-                    if '=' in js[:20]: js = js.split('=', 1)[1].strip().rstrip(';')
-                    dados = json.loads(js)
-                    if isinstance(dados, list): dados = dados[0]
-                    path_p = achar_caminho_json(dados, gerar_possibilidades_preco(p_alvo))
-                    if path_p:
-                        mapa["arquitetura"], achou_json = "JSON", True
-                        mapa["caminhos"] = {"preco": path_p, "nome": achar_caminho_json(dados, [n_alvo])}
-                        break
-                except: continue
-            if achou_json: break
+    print(f"📦 Encontrados {len(arquivos)} arquivos para análise.")
 
-        # Busca HTML (Modo Robusto)
-        if not achou_json:
-            print(f"{Y}⚠️ JSON não detectado. Tentando HTML Selector...{C}")
-            sel_p, sel_n = achar_seletor_html(soup, p_alvo), achar_seletor_html(soup, n_alvo)
-            if sel_p:
-                mapa["arquitetura"] = "HTML_SELECTOR"
-                mapa["caminhos"] = {"preco": sel_p, "nome": sel_n}
+    # Carrega banco existente ou cria um novo
+    if os.path.exists('database_sites.json'):
+        with open('database_sites.json', 'r', encoding='utf-8') as f:
+            try:
+                banco = json.load(f)
+            except:
+                banco = {}
+    else:
+        banco = {}
+
+    for arquivo in arquivos:
+        print(f"\n🔍 Analisando arquivo: {arquivo}")
+        caminho_completo = os.path.join(pasta, arquivo)
+        
+        with open(caminho_completo, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Entrada de dados com proteção
+        p_alvo_str = obter_entradas_blindadas()
+        n_alvo = input("📦 Nome do Produto (conforme o site): ").strip()
+        
+        # Sugere o nome do site baseado no nome do arquivo
+        sugestao_nome = arquivo.replace('.html', '').lower().replace(' ', '')
+        nome_site = input(f"🌍 ID do Site (Sugestão: {sugestao_nome}): ").strip().lower().replace(' ', '') or sugestao_nome
+
+        mapeado = False
+
+        # --- TENTATIVA 1: JSON LD ---
+        scripts = soup.find_all('script', type='application/ld+json')
+        for script in scripts:
+            try:
+                data = json.loads(script.string)
+                if isinstance(data, list): data = data[0]
+                
+                def busca_json(obj, alvo_p, alvo_n):
+                    path_p, path_n = None, None
+                    def walk(curr, path=""):
+                        nonlocal path_p, path_n
+                        if isinstance(curr, dict):
+                            for k, v in curr.items():
+                                new_path = f"{path}['{k}']"
+                                if str(v) == alvo_p: path_p = new_path
+                                if isinstance(v, str) and alvo_n in v: path_n = new_path
+                                walk(v, new_path)
+                        elif isinstance(curr, list):
+                            for i, v in enumerate(curr):
+                                new_path = f"{path}[{i}]"
+                                walk(v, new_path)
+                    walk(obj)
+                    return path_p, path_n
+
+                p_path, n_path = busca_json(data, p_alvo_str, n_alvo)
+                if p_path:
+                    banco[nome_site] = {
+                        "arquitetura": "JSON",
+                        "caminhos": {"preco": p_path, "nome": n_path}
+                    }
+                    print(f"✅ {nome_site} mapeado via JSON!")
+                    mapeado = True
+                    break
+            except:
+                continue
+
+        # --- TENTATIVA 2: HTML SELECTOR ---
+        if not mapeado:
+            print("⚠️ JSON não detectado. Tentando HTML Selector...")
+            elemento_p = soup.find(string=lambda t: t and p_alvo_str in t)
+            if elemento_p:
+                pai = elemento_p.parent
+                # Tenta pegar a classe para ser mais específico
+                seletor = pai.name
+                if pai.get('class'):
+                    seletor += "." + ".".join(pai.get('class'))
+                
+                banco[nome_site] = {
+                    "arquitetura": "HTML_SELECTOR",
+                    "caminhos": {"preco": seletor, "nome": "title"}
+                }
+                print(f"✅ {nome_site} mapeado via HTML_SELECTOR!")
+                mapeado = True
             else:
-                print(f"{R}❌ Valor não encontrado no arquivo.{C}"); continue
+                print(f"❌ Valor {p_alvo_str} não encontrado no arquivo.")
 
-        site_key = input(f"🌍 Nome do Site: ") or nome_arq
-        db[site_key] = mapa
-        with open(db_file, 'w', encoding='utf-8') as f: json.dump(db, f, indent=4)
-        print(f"{G}✅ {site_key} mapeado via {mapa['arquitetura']}!{C}")
+        # Salva o banco a cada arquivo processado
+        with open('database_sites.json', 'w', encoding='utf-8') as f:
+            json.dump(banco, f, indent=4, ensure_ascii=False)
 
-if __name__ == "__main__": identificar()
+    print("\n✨ Processamento concluído!")
+
+if __name__ == "__main__":
+    identificar()
