@@ -1,0 +1,137 @@
+{
+    "araujo": {
+        "caminhos": {
+            "preco": "['offers']['price']",
+            "nome": "['name']",
+            "identificador": "['sku']"
+        }
+    },
+    "farmaconde": {
+        "caminhos": {
+            "preco": "['offers']['lowPrice']",
+            "nome": "['name']",
+            "identificador": "['sku']"
+        }
+    },
+    "farmaciaindiana": {
+        "caminhos": {
+            "preco": "['offers']['lowPrice']",
+            "nome": "['name']",
+            "identificador": "['sku']"
+        }
+    },
+    "drogariaminasbrasil": {
+        "caminhos": {
+            "preco": "['offers']['price']",
+            "nome": "['name']",
+            "identificador": "['sku']"
+        }
+    },
+    "extrafarma": {
+        "caminhos": {
+            "preco": "['offers']['lowPrice']",
+            "nome": "['name']",
+            "identificador": "['sku']"
+        }
+    },
+    "minasmais": {
+        "caminhos": {
+            "preco": "['offers']['lowPrice']",
+            "nome": "['name']",
+            "identificador": "['sku']"
+        }
+    },
+    "drogaraia": {
+        "caminhos": {
+            "preco": "['props']['pageProps']['productData']['price_aux']['value_to']",
+            "nome": "['props']['pageProps']['pageQuery']['title']",
+            "identificador": "['props']['pageProps']['pageQuery']['sku']"
+        }
+    },
+    "FarmaConde": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['lowPrice']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "FarmaciaIndiana": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['lowPrice']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "DrogariaMinasBrasil": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['price']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "MinasMais": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['lowPrice']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "Araujo": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['price']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "DrogaRaia": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['price']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "ExtraFarma": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['lowPrice']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "Pre\u00e7oPopular": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['offers']['lowPrice']",
+            "name": "['name']",
+            "sku": "['sku']",
+            "brand": "['brand']"
+        }
+    },
+    "DrogariaS\u00e3oPaulo": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['productPriceFrom']",
+            "name": "['productName']"
+        }
+    },
+    "DrogariaPacheco": {
+        "arquitetura": "Busca_Profunda",
+        "caminhos": {
+            "preco_unitario": "['productPriceFrom']",
+            "productId": "['productId']"
+        }
+    }
+}
