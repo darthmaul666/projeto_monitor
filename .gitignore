@@ -1,2 +1,14 @@
+# Ambiente Virtual
 venv/
+.env
+
+# Arquivos de Cache do Python
+__pycache__/
+*.py[cod]
+
+# Pastas de dados e testes (Para não subir os HTMLs baixados)
 html_alvos/
+*.html
+
+# Arquivos do Sistema
+.DS_Store
